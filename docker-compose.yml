@@ -1,0 +1,48 @@
+services:
+  admission-db:
+    container_name: admission_db
+    image: postgres
+    ports:
+      - '5433:5432'
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nginx_network
+  admission:
+    image: registry.github.com/usmonjonqahhorov/e-school/develop:web #change
+    build: ./
+    container_name: admission_app
+    command: python manage.py runserver 0.0.0.0:9000
+    volumes:
+      - ./:/usr/src/app/
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    depends_on:
+      - admission-db
+    networks:
+      - nginx_network
+  admission-worker:
+    image: registry.github.com/usmonjonqahhorov/e-school/develop:web #change
+    build: ./
+    container_name: admission_worker
+    command: celery --app=config worker -l INFO
+    volumes:
+      - ./:/usr/src/app/"
+    user: root
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - admission-db
+    networks:
+      - nginx_network
+volumes:
+  postgres_data:
+
+networks:
+  nginx_network:
+    external: true
