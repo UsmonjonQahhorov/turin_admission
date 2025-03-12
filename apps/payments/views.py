@@ -43,12 +43,12 @@ CLICK_MERCHANT_USER_ID = os.environ.get("CLICK_MERCHANT_USER_ID")
 PAYME_SHOP_ID = os.environ.get("PAYME_SHOP_ID")
 PAYME_SECRET_KEY = os.environ.get("PAYME_SECRET_KEY")
 
+__name__
 
-
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("payments")
 
 class ClickWebhookAPIView(ClickWebhook):
-
+    print("Verify")
     def successfully_payment(self, params):
         """
         Successfully handled payment process.
@@ -56,20 +56,23 @@ class ClickWebhookAPIView(ClickWebhook):
         logger.info(f"Payment successful: {params}")
         try:
             transaction = ClickTransaction.objects.filter(transaction_id=params.click_trans_id).first()
+            print(transaction)
             if not transaction:
-                logger.error(f"Transaction not found: {params.click_trans_id}")
+                print(f"Transaction not found: {params.click_trans_id}")
                 return
 
             payment = Payment.objects.filter(id=transaction.account_id).first()
             if not payment:
-                logger.error(f"Payment record not found for transaction: {params.click_trans_id}")
+                print(f"Payment record not found for transaction: {params.click_trans_id}")
                 return
 
             payment.status = Status.CONFIRMED
             payment.save()
-            logger.info(f"Payment confirmed for transaction: {params.click_trans_id}")
+            print(f"Payment confirmed for transaction: {params.click_trans_id}")
         except Exception as e:
-            logger.error(f"Error confirming payment: {str(e)}")
+            print(f"Error confirming payment: {str(e)}")
+
+
 
 class PaymentInitializeView(APIView):
     serializer_class = serializers.PaymentInitializeSerializer
@@ -82,17 +85,26 @@ class PaymentInitializeView(APIView):
         
         data = serializer.validated_data
         logger.debug(f"Received payment initialization request: {data}")
-        print(request.user.id)
+        
+        # Save payment to the database BEFORE generating payment link
+        payment = Payment.objects.create(
+            amount=data['amount'],
+            status=Status.PENDING_PAYMENT,  # Ensure there is a 'PENDING' status in your model
+            provider="CLICK",
+            applicant_id=request.user.id
+        )
+        print(f"Payment record created: {payment.id}")
+        print(f"Payment amount before sending: {data['amount']}")
+
         paylink = click_up.initializer.generate_pay_link(
-            id=request.user.id,
+            id=payment.id,
             amount=data['amount'],
             return_url=data.get("return_url", "https://example.com")
         )
-        logger.debug(f"Generated Click payment link: {paylink}")
+        print(f"Generated Click payment link: {paylink}")
+        print(f"Generated payment link with amount: {data['amount']}")
+
         return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
-    
-            # logger.error(f"Error generating Click payment link: {str(e)}")
-            # return Response({"error": "Failed to generate payment link"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -126,3 +138,5 @@ class PaymentMethodListView(ListAPIView):
         return Response({"methods": serializer.data})
     
 
+
+# eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQyNTg1NjE1LCJpYXQiOjE3NDE3MjE2MTUsImp0aSI6IjM3YTk0YzZjNzIyZjQ0MGM5YzE4ZGY1OTQ5N2M3NDExIiwidXNlcl9pZCI6MX0.WjnuOy5KjkkEgKLZAECVZWoC1RAW_kCEceleuxb6_Mw
