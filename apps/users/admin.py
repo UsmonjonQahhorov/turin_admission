@@ -26,8 +26,8 @@ class AplicantAdmin(admin.ModelAdmin):
 
 @admin.register(Program)
 class ProgramAdmin(admin.ModelAdmin):
-    list_display = ['name', 'level']
-    list_display_links = ['name', 'level']
+    list_display = ['name', 'level', 'exam_date']
+    list_display_links = ['name', 'level', 'exam_date']
 
     save_on_top = True
 

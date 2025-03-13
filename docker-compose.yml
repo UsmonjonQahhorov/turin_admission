@@ -11,10 +11,10 @@ services:
     networks:
       - nginx_network
   admission:
-    image: registry.github.com/usmonjonqahhorov/e-school/develop:web #change
+    image: registry.https://github.com/UsmonjonQahhorov/turin_admission/develop:web #change
     build: ./
     container_name: admission_app
-    command: python manage.py runserver 0.0.0.0:9000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./:/usr/src/app/
     ports:
@@ -26,7 +26,7 @@ services:
     networks:
       - nginx_network
   admission-worker:
-    image: registry.github.com/usmonjonqahhorov/e-school/develop:web #change
+    image: registry.https://github.com/UsmonjonQahhorov/turin_admission/develop:web
     build: ./
     container_name: admission_worker
     command: celery --app=config worker -l INFO

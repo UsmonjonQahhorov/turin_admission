@@ -8,8 +8,12 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
+    
     path('program/', views.ProgramCreateView.as_view(), name="program-create"),
     path('program/list/', views.ProgramListView.as_view(), name="program-list"),
+    path("program/update/<int:pk>", views.ProgramUpdate.as_view(), name = "program_update"),
+    path("program/destroy/<int:pk>", views.ProgramDestroy.as_view(), name = "program_destroy"),
+
 
     path('applicant/', views.AplicantCreateView.as_view(), name="aplicant-create"),
     path('applicant/list/', views.AplicantListView.as_view(), name="aplicant-list"),
@@ -18,6 +22,10 @@ urlpatterns = [
     path('applicant/password/change/', views.ApplicantPassUpdateView.as_view(), name="change-password"),
 
     path('exam/registration/', views.ExamRegistrationCreateView.as_view(), name="exam-registration-create"),
+
     path('exam/dates/', views.ExamDatesListView.as_view(), name="exam-date-create"),
-    path("exam/reg/status/", views.ExamRegistrationListView.as_view(), name="exam-registration-list")
+    path("exam/reg/status/", views.ExamRegistrationListView.as_view(), name="exam-registration-list"),
+    path("exam/update/<int:pk>/", views.ExamDateUpdateView.as_view(), name = "exam_date_update"),
+    path("exam/delete/<int:pk>", views.ExamDateDeleteView.as_view(), name="exam_delete")
+
 ]

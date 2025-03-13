@@ -16,6 +16,8 @@ from django.core.files.base import ContentFile
 from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.contrib.auth.models import AbstractBaseUser
+from django.core.exceptions import ValidationError
+
 
 
 class BaseModel(Model):
@@ -50,16 +52,24 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
     language_certificates = models.JSONField(default=list, null=True)
     gender = models.CharField(choices=GenderChoices.choices, max_length=100)
     program = models.ForeignKey("Program", on_delete=models.CASCADE, null=True)
+    exam_date = models.ForeignKey("ExamDate", on_delete=models.CASCADE)
 
     file = models.FileField(upload_to=user_directory_path, null=True)
     image = models.ImageField(upload_to=user_directory_path, null=True)
+    certificates = models.FileField(upload_to=user_directory_path, null=True)
 
     is_staff = models.BooleanField(default=False)  
     is_superuser = models.BooleanField(default=False)
 
 
+    def clean(self):
+        if self.exam_date and self.program and self.exam_date not in ExamDate.objects.filter(program=self.program):
+            raise ValidationError(f"The selected program '{self.program}' does not have an exam on {self.exam_date}. Please choose a valid exam date.")
+
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None  
+        self.clean()
         super().save(*args, **kwargs) 
 
         if is_new: 
@@ -77,7 +87,13 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
                 default_storage.save(new_image_path, ContentFile(image_content))
                 self.image.name = new_image_path  
 
-            super().save(update_fields=["file", "image"])     
+            if self.certificates:
+                new_file_path = os.path.join(new_directory, os.path.basename(self.file.name))
+                file_content = self.file.read() 
+                default_storage.save(new_file_path, ContentFile(file_content)) 
+                self.file.name = new_file_path 
+
+            super().save(update_fields=["file", "image", 'certificates'])     
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} {self.program}"
@@ -105,6 +121,7 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
 class Program(models.Model):
     name = models.CharField(max_length=255)
     level = models.CharField(max_length=50, choices=DagreeProgram.choices)
+    exam_date = models.ForeignKey("ExamDate", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.name} ({self.get_level_display()})"

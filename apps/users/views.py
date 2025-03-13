@@ -1,5 +1,5 @@
 from django.shortcuts import redirect
-from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from apps.users import serializers
 from apps.users.models import Applicant, ExamDate, ExamRegistration, Program
 from django.views.decorators.csrf import csrf_exempt
@@ -23,10 +23,10 @@ class AplicantCreateView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
 
 class AplicantListView(ListAPIView):
@@ -97,6 +97,13 @@ class ApplicantPassUpdateView(UpdateAPIView):
 class ProgramCreateView(CreateAPIView):
     serializer_class = serializers.ProgramSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 
 """Program List View Test"""
@@ -109,6 +116,20 @@ class ProgramListView(ListAPIView):
         programs = Program.objects.all()
         serializer = self.serializer_class(programs, many=True)
         return JsonResponse(serializer.data, safe=False)
+    
+
+class ProgramUpdate(UpdateAPIView):
+    serializer_class = serializers.ProgramSerializer
+
+
+class ProgramDestroy(DestroyAPIView):
+    serializer_class = serializers.ProgramSerializer
+
+
+
+    
+
+"""PROGRAM CRUD CLOSED"""
 
 
 """Exam Registration Create View Test"""
@@ -131,29 +152,14 @@ class ExamRegistrationListView(ListAPIView):
 
     def get_queryset(self):
         return ExamRegistration.objects.filter(aplicant=self.request.user)
+    
+"""EXAM REGISTRATION CRUD CLOSED"""
 
 
     
 
-# class AplicantUpdateView(CreateAPIView):
-#     serializer_class = serializers.ApplicantUpdateSerializer
-#     parser_classes = MultiPartParser, FormParser
-#     permission_classes = [IsAuthenticated]
 
-#     def get_object(self):
-#         return self.request.user
-
-#     def perform_update(self, serializer):
-#         if 'password' in serializer.validated_data:
-#             serializer.validated_data['password'] = make_password(serializer.validated_data['password'])
-#             serializer.validated_data["upd_status"] = True
-#         serializer.save()
-
-#     def patch(self, request, *args, **kwargs):
-#         return self.partial_update(request, *args, **kwargs)
-    
-
-
+"""Exam Dates Views"""
 
 class ExamDatesListView(ListAPIView):
     serializer_class = serializers.ExamDateSerializer
@@ -168,14 +174,18 @@ class ExamDatesListView(ListAPIView):
 from rest_framework.views import APIView
 
 
+class ExamDateUpdateView(UpdateAPIView):
+    serializer_class = serializers.ExamDateUpdate
 
-#not compleated
-# class LoginView(APIView):
-#     def post(self, request):
-#         serializer = serializers.LoginSerializer(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.validated_data["user"]
-#             login(request, user)
-#             token, created = Token.objects.get_or_create(user=user)
-#             return Response({"token": token.key, "user": serializers.ApplicantRegistrationSerializer(user).data}, status=status.HTTP_200_OK)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ExamDateDeleteView(DestroyAPIView):
+    serializer_class = serializers.ExamDateUpdate
+
+
+class ExamDatePost(CreateAPIView):
+    serializer_class = serializers.ExamDateSerializer
+
+
+"""EXAM DATE CRUD CLOSED"""
+
+
+
