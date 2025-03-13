@@ -10,24 +10,23 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - nginx_network
-  admission:
-    image: registry.https://github.com/UsmonjonQahhorov/turin_admission/develop:web #change
-    build: ./
+  metsenat:
+    image: registry.github.com/usmonjonqahhorov/turin_admission/develop:web
     container_name: admission_app
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./:/usr/src/app/
     ports:
-      - "9000:9000"
+      - "8000:8000"
     env_file:
       - .env
     depends_on:
       - admission-db
     networks:
       - nginx_network
+
   admission-worker:
-    image: registry.https://github.com/UsmonjonQahhorov/turin_admission/develop:web
-    build: ./
+    image: registry.ghcr.io/usmonjonqahhorov/turin_admission/develop:web
     container_name: admission_worker
     command: celery --app=config worker -l INFO
     volumes:
