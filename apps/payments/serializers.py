@@ -16,7 +16,7 @@ class PaymentMethodSerializer(serializers.Serializer):
 
 
 class PaymentInitializeSerializer(serializers.Serializer):
-    # application_id = serializers.IntegerField(required=True)
+    application_id = serializers.IntegerField(required=True)
     amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
     return1_url = serializers.URLField(required=False, allow_blank=True)
 

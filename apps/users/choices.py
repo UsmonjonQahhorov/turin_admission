@@ -36,7 +36,7 @@ class GenderChoices(models.TextChoices):
 
 
 class Status(models.TextChoices):
-        PENDING_PAYMENT = "pending_payment", "Ожидание платежа"
+        PENDING_PAYMENT = "pending", "Ожидание платежа"
         CONFIRMED = "confirmed", "Оплачено"
         FAILED = "failed", "Провален"
         CANCELED = "canceled", "Отменено"

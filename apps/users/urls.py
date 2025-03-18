@@ -18,14 +18,17 @@ urlpatterns = [
     path('applicant/', views.AplicantCreateView.as_view(), name="aplicant-create"),
     path('applicant/list/', views.AplicantListView.as_view(), name="aplicant-list"),
     path('applicant/get-me/', views.ApplicantRetriveView.as_view(), name="aplicant-retrive"),
-    path('applicant/update/', views.ApplicantUpdateView.as_view(), name="aplicant-update"),
+    path('applicant/get_id/<int:pk>/', views.ApplicantRetriveView.as_view(), name='get_user_id'),
+    path('applicant/update/<int:pk>', views.ApplicantUpdateView.as_view(), name="aplicant-update"),
     path('applicant/password/change/', views.ApplicantPassUpdateView.as_view(), name="change-password"),
 
     path('exam/registration/', views.ExamRegistrationCreateView.as_view(), name="exam-registration-create"),
+    path("exam/register/update/<int:pk>", views.ExamRegisterUpdate.as_view(), name="register_update"),
 
     path('exam/dates/', views.ExamDatesListView.as_view(), name="exam-date-create"),
     path("exam/reg/status/", views.ExamRegistrationListView.as_view(), name="exam-registration-list"),
-    path("exam/update/<int:pk>/", views.ExamDateUpdateView.as_view(), name = "exam_date_update"),
     path("exam/delete/<int:pk>", views.ExamDateDeleteView.as_view(), name="exam_delete")
 
 ]
+
+

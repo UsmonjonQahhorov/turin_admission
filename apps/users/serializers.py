@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext as _
 from apps.users.choices import Status
-from .models import Applicant, ExamDate, ExamRegion, ExamRegistration, Program, ExamAttempt
+from .models import Applicant, ExamDate, ExamRegion, ExamRegistration, Program
 from django.contrib.auth.hashers import make_password
 
         
@@ -23,6 +23,7 @@ class ApplicantRegistrationSerializer(serializers.ModelSerializer):
             'language_certificates',
             'gender',
             'program',
+            'score',
             'file',
             'image',
             'certificates',
@@ -110,27 +111,24 @@ class ProgramSerializer(serializers.ModelSerializer):
 class ExamRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamRegistration
-        exclude = ['status', 'aplicant']    
-
+        exclude = ['status', 'aplicant']  # Removed "result" and "ball" since they're now part of the model
+    
     def create(self, validated_data):
         user = self.context["request"].user
         program = validated_data['program']
         exam_date = validated_data['exam_date']
 
-        exam_registration, created = ExamRegistration.objects.get_or_create(
+        exam_registration = ExamRegistration.objects.get_or_create(
             aplicant=user,
             program=program,
-            defaults={'exam_date': exam_date, 'status': Status.PENDING_PAYMENT}
+            defaults={
+                'exam_date': exam_date, 
+                'status': Status.PENDING_PAYMENT,
+                'result': None,
+                'ball': None
+            }
         )
-
-        last_attempt = ExamAttempt.objects.filter(registration=exam_registration).order_by('-attempt_number').first()
-        next_attempt_number = (last_attempt.attempt_number + 1) if last_attempt else 1
-
-        ExamAttempt.objects.create(
-            registration=exam_registration,
-            attempt_number=next_attempt_number
-        )
-
+        
         return exam_registration
     
 
@@ -145,14 +143,6 @@ class ExamRegistrationSerializer(serializers.ModelSerializer):
 
         return data
     
-
-class ExamAttemptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ExamAttempt
-        exclude = ['registration']
-
-
-
 class ExamRegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamRegion
@@ -180,20 +170,18 @@ class AplicantRetriveExamSerializer(serializers.ModelSerializer):
 
 class RegistrationRetriveSerialize(serializers.ModelSerializer):
     program = ProgramSerializer()
-    # result = ExamAttemptSerializer()
     aplicant = AplicantRetriveExamSerializer()
     exam_date = ExamDateSerializer()
+
     class Meta:
         model = ExamRegistration
-        fields = ["aplicant", "exam_date", "status", "program"]
+        fields = ["aplicant", "exam_date", "status", "program", "result", "ball"]
         
   
-    
-
-
-
-
-
+class RegisterUpdateSer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamRegistration
+        fields = ["program", "exam_date"]
     
     """Login Serializer"""
 class LoginSerializer(serializers.Serializer):
@@ -225,5 +213,6 @@ class ApplicantRetriveSerializer(serializers.ModelSerializer):
         "file",
         "image",
         "program",
-        "exam_date"
+        "exam_date",
+        'score',
         ]

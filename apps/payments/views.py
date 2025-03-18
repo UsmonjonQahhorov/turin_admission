@@ -48,12 +48,11 @@ __name__
 logger = logging.getLogger("payments")
 
 class ClickWebhookAPIView(ClickWebhook):
-    print("Verify")
     def successfully_payment(self, params):
         """
         Successfully handled payment process.
         """
-        logger.info(f"Payment successful: {params}")
+        print(f"Payment successful: {params}")
         try:
             transaction = ClickTransaction.objects.filter(transaction_id=params.click_trans_id).first()
             print(transaction)
@@ -84,14 +83,14 @@ class PaymentInitializeView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         data = serializer.validated_data
+        print(data)
         logger.debug(f"Received payment initialization request: {data}")
         
-        # Save payment to the database BEFORE generating payment link
         payment = Payment.objects.create(
             amount=data['amount'],
-            status=Status.PENDING_PAYMENT,  # Ensure there is a 'PENDING' status in your model
+            status=Status.PENDING_PAYMENT,  
             provider="CLICK",
-            applicant_id=request.user.id
+            applicant_id=data['application_id']
         )
         print(f"Payment record created: {payment.id}")
         print(f"Payment amount before sending: {data['amount']}")
@@ -99,7 +98,7 @@ class PaymentInitializeView(APIView):
         paylink = click_up.initializer.generate_pay_link(
             id=payment.id,
             amount=data['amount'],
-            return_url=data.get("return_url", "https://example.com")
+            return_url=data.get("return_url", data['return1_url'])
         )
         print(f"Generated Click payment link: {paylink}")
         print(f"Generated payment link with amount: {data['amount']}")

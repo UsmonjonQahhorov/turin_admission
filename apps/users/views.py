@@ -153,6 +153,10 @@ class ExamRegistrationListView(ListAPIView):
     def get_queryset(self):
         return ExamRegistration.objects.filter(aplicant=self.request.user)
     
+
+class ExamRegisterUpdate(UpdateAPIView):
+    serializer_class=serializers.RegisterUpdateSer
+    
 """EXAM REGISTRATION CRUD CLOSED"""
 
 
@@ -174,8 +178,6 @@ class ExamDatesListView(ListAPIView):
 from rest_framework.views import APIView
 
 
-class ExamDateUpdateView(UpdateAPIView):
-    serializer_class = serializers.ExamDateUpdate
 
 class ExamDateDeleteView(DestroyAPIView):
     serializer_class = serializers.ExamDateUpdate

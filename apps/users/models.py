@@ -49,7 +49,8 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, unique=True)
     password = models.CharField(max_length=255)
     institution = models.CharField(max_length=150)
-    language_certificates = models.JSONField(default=list, null=True)
+    language_certificates = models.CharField(max_length=255, null=True)
+    score = models.FloatField(null=True)
     gender = models.CharField(choices=GenderChoices.choices, max_length=100)
     program = models.ForeignKey("Program", on_delete=models.CASCADE, null=True)
     exam_date = models.ForeignKey("ExamDate", on_delete=models.CASCADE)
@@ -68,12 +69,27 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
 
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None  
+        is_new = self.pk is None
+        
         self.clean()
-        super().save(*args, **kwargs) 
-
-        if is_new: 
-            new_directory = f"{self.first_name}/" 
+        super().save(*args, **kwargs)
+        
+        # Create ExamRegistration and ExamAttempt for new applicants
+        if is_new and self.program and self.exam_date:
+            # Create ExamRegistration
+            ExamRegistration.objects.create(
+                aplicant=self,  
+                program=self.program,
+                exam_date=self.exam_date,
+                status=Status.PENDING_PAYMENT,
+                attempt_number=1,
+                result=None,
+                ball=None 
+            )
+            
+        
+        if is_new:
+            new_directory = f"{self.first_name}/"
  
             if self.file:
                 new_file_path = os.path.join(new_directory, os.path.basename(self.file.name))
@@ -141,27 +157,25 @@ class ExamDate(models.Model):
     def __str__(self):
         return f"{self.region.name} - {self.date}"
     
-
 class ExamRegistration(models.Model):
     aplicant = models.ForeignKey(Applicant, on_delete=models.CASCADE)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
     exam_date = models.ForeignKey(ExamDate, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING_PAYMENT)
+    
+    result = models.BooleanField(null=True)
+    ball = models.FloatField(null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.aplicant} - {self.program} ({self.status})"
-
-class ExamAttempt(models.Model):
-    registration = models.ForeignKey(ExamRegistration, on_delete=models.CASCADE)
-    attempt_number = models.IntegerField()
-    result = models.BooleanField(null=True)
-    ball = models.FloatField(null=True)  
-
-    def __str__(self):
-        return f"{self.registration} - Попытка {self.attempt_number}--{self.result}"
     
+    def __str__(self):
+        return f"{self.aplicant} - {self.program} -({self.status})"
+        
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
 
 
 
