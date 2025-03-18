@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext as _
 from apps.users.choices import Status
-from .models import Applicant, ExamDate, ExamRegion, ExamRegistration, Program
+from .models import Applicant, ExamDate, ExamRegion, ExamRegistration, Program, ProgramExamdate
 from django.contrib.auth.hashers import make_password
 
         
@@ -111,9 +111,10 @@ class ProgramSerializer(serializers.ModelSerializer):
 class ExamRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamRegistration
-        exclude = ['status', 'aplicant']  # Removed "result" and "ball" since they're now part of the model
+        exclude = ['status', 'aplicant', "result", "ball"] 
     
     def create(self, validated_data):
+        print(f"ExamRegister: {validated_data}")
         user = self.context["request"].user
         program = validated_data['program']
         exam_date = validated_data['exam_date']
@@ -216,3 +217,14 @@ class ApplicantRetriveSerializer(serializers.ModelSerializer):
         "exam_date",
         'score',
         ]
+
+
+
+"""Exam dates"""
+
+class ProgramExamDateSer(serializers.ModelSerializer):
+    programs = ProgramSerializer()
+    exam_dates = ExamDateSerializer()
+    class Meta:
+        model = ProgramExamdate
+        fields = ["programs", "exam_dates"]

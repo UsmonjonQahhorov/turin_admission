@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 import json
 import logging
 import os
@@ -81,24 +82,27 @@ class PaymentInitializeView(APIView):
     
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         data = serializer.validated_data
-        print(data)
         logger.debug(f"Received payment initialization request: {data}")
-        
+
+        amount = Decimal(data['amount'])
+        updated_amount = amount * Decimal('1.01')
+
+        # Save payment to the database BEFORE generating payment link
         payment = Payment.objects.create(
-            amount=data['amount'],
-            status=Status.PENDING_PAYMENT,  
+            amount=updated_amount,
+            status=Status.PENDING_PAYMENT,  # Ensure there is a 'PENDING' status in your model
             provider="CLICK",
-            applicant_id=data['application_id']
+            applicant_id=request.user.id
         )
         print(f"Payment record created: {payment.id}")
-        print(f"Payment amount before sending: {data['amount']}")
+        print(f"Payment amount before sending: {type(data['amount'])}")
 
         paylink = click_up.initializer.generate_pay_link(
             id=payment.id,
-            amount=data['amount'],
-            return_url=data.get("return_url", data['return1_url'])
+            amount=float(data['amount']),
+            return_url=data.get("return_url", "https://example.com")
         )
         print(f"Generated Click payment link: {paylink}")
         print(f"Generated payment link with amount: {data['amount']}")

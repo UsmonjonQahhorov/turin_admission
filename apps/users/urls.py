@@ -27,7 +27,9 @@ urlpatterns = [
 
     path('exam/dates/', views.ExamDatesListView.as_view(), name="exam-date-create"),
     path("exam/reg/status/", views.ExamRegistrationListView.as_view(), name="exam-registration-list"),
-    path("exam/delete/<int:pk>", views.ExamDateDeleteView.as_view(), name="exam_delete")
+    path("exam/delete/<int:pk>", views.ExamDateDeleteView.as_view(), name="exam_delete"),
+
+    path("programs/exam/dates", views.ExamDateProgram.as_view(), name="program_exam_dates"),
 
 ]
 

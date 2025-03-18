@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.users.models import Applicant, ExamDate, ExamRegion, ExamRegistration, Program
+from apps.users.models import Applicant, ExamDate, ExamRegion, ExamRegistration, Program, ProgramExamdate
 
 # @admin.register(ClickOrder)
 # class ClickOrderAdmin(admin.ModelAdmin):
@@ -26,8 +26,8 @@ class AplicantAdmin(admin.ModelAdmin):
 
 @admin.register(Program)
 class ProgramAdmin(admin.ModelAdmin):
-    list_display = ['name', 'level', 'exam_date']
-    list_display_links = ['name', 'level', 'exam_date']
+    list_display = ['name', 'level']
+    list_display_links = ['name', 'level']
 
     save_on_top = True
 
@@ -48,3 +48,9 @@ class ExamRegistrationAdmin(admin.ModelAdmin):
     list_display = ['aplicant', 'program', 'exam_date', 'status', 'created_at', 'updated_at']
     list_display_links = ['aplicant', 'program', 'exam_date', 'status','created_at', 'updated_at']
 
+
+
+@admin.register(ProgramExamdate)
+class ProgramExamDate(admin.ModelAdmin):
+    list_display = ["programs", "exam_dates"]
+    list_display_links = ["programs", "exam_dates"]

@@ -53,7 +53,7 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
     score = models.FloatField(null=True)
     gender = models.CharField(choices=GenderChoices.choices, max_length=100)
     program = models.ForeignKey("Program", on_delete=models.CASCADE, null=True)
-    exam_date = models.ForeignKey("ExamDate", on_delete=models.CASCADE)
+    exam_date = models.ForeignKey("ExamDate", on_delete=models.CASCADE, null=True)
 
     file = models.FileField(upload_to=user_directory_path, null=True)
     image = models.ImageField(upload_to=user_directory_path, null=True)
@@ -64,9 +64,8 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
 
 
     def clean(self):
-        if self.exam_date and self.program and self.exam_date not in ExamDate.objects.filter(program=self.program):
+        if self.exam_date and self.program and not self.program.exam_date.filter(id=self.exam_date.id).exists():
             raise ValidationError(f"The selected program '{self.program}' does not have an exam on {self.exam_date}. Please choose a valid exam date.")
-
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -74,9 +73,7 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
         self.clean()
         super().save(*args, **kwargs)
         
-        # Create ExamRegistration and ExamAttempt for new applicants
         if is_new and self.program and self.exam_date:
-            # Create ExamRegistration
             ExamRegistration.objects.create(
                 aplicant=self,  
                 program=self.program,
@@ -86,30 +83,18 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
                 result=None,
                 ball=None 
             )
-            
         
         if is_new:
             new_directory = f"{self.first_name}/"
- 
-            if self.file:
-                new_file_path = os.path.join(new_directory, os.path.basename(self.file.name))
-                file_content = self.file.read() 
-                default_storage.save(new_file_path, ContentFile(file_content)) 
-                self.file.name = new_file_path  
+            
+            for field in ["file", "image", "certificates"]:
+                uploaded_file = getattr(self, field)
+                if uploaded_file:
+                    new_file_path = os.path.join(new_directory, os.path.basename(uploaded_file.name))
+                    default_storage.save(new_file_path, ContentFile(uploaded_file.read()))
+                    setattr(self, field, new_file_path)
 
-            if self.image:
-                new_image_path = os.path.join(new_directory, os.path.basename(self.image.name))
-                image_content = self.image.read() 
-                default_storage.save(new_image_path, ContentFile(image_content))
-                self.image.name = new_image_path  
-
-            if self.certificates:
-                new_file_path = os.path.join(new_directory, os.path.basename(self.file.name))
-                file_content = self.file.read() 
-                default_storage.save(new_file_path, ContentFile(file_content)) 
-                self.file.name = new_file_path 
-
-            super().save(update_fields=["file", "image", 'certificates'])     
+            super().save(update_fields=["file", "image", "certificates"])
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} {self.program}"
@@ -118,10 +103,8 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
         verbose_name = ("Applicant")
         verbose_name_plural = ("Applicants")
 
-
     def has_module_perms(self, app_label):
         return True
-
 
     USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = ["first_name", "last_name"]
@@ -137,12 +120,10 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
 class Program(models.Model):
     name = models.CharField(max_length=255)
     level = models.CharField(max_length=50, choices=DagreeProgram.choices)
-    exam_date = models.ForeignKey("ExamDate", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.name} ({self.get_level_display()})"
     
-
 
 class ExamRegion(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -156,6 +137,16 @@ class ExamDate(models.Model):
 
     def __str__(self):
         return f"{self.region.name} - {self.date}"
+    
+
+class ProgramExamdate(models.Model):
+    programs = models.ForeignKey(Program, related_name="program_exam", on_delete=models.CASCADE)
+    exam_dates = models.ForeignKey(ExamDate, related_name="exam_date_program", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.programs.name} - {self.exam_dates.date}"
+
+
     
 class ExamRegistration(models.Model):
     aplicant = models.ForeignKey(Applicant, on_delete=models.CASCADE)

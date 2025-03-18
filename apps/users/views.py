@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from apps.users import serializers
-from apps.users.models import Applicant, ExamDate, ExamRegistration, Program
+from apps.users.models import Applicant, ExamDate, ExamRegistration, Program, ProgramExamdate
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse
@@ -185,6 +185,12 @@ class ExamDateDeleteView(DestroyAPIView):
 
 class ExamDatePost(CreateAPIView):
     serializer_class = serializers.ExamDateSerializer
+
+
+
+class ExamDateProgram(ListAPIView):
+    serializer_class = serializers.ProgramExamDateSer
+    queryset = ProgramExamdate.objects.all()
 
 
 """EXAM DATE CRUD CLOSED"""
