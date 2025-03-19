@@ -63,10 +63,6 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
 
 
-    def clean(self):
-        if self.exam_date and self.program and not self.program.exam_date.filter(id=self.exam_date.id).exists():
-            raise ValidationError(f"The selected program '{self.program}' does not have an exam on {self.exam_date}. Please choose a valid exam date.")
-
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         
@@ -79,7 +75,6 @@ class Applicant(BaseModel, AbstractBaseUser, PermissionsMixin):
                 program=self.program,
                 exam_date=self.exam_date,
                 status=Status.PENDING_PAYMENT,
-                attempt_number=1,
                 result=None,
                 ball=None 
             )

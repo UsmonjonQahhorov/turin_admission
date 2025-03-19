@@ -42,18 +42,18 @@ class ApplicantRegistrationSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
     
 
-    def validate(self, data):
-        program = data.get('program')
-        exam_date = data.get('exam_date')
+    # def validate(self, data):
+    #     print(data)
+    #     program = data.get('program')
+    #     exam_date = data.get('exam_date')
 
-        if program and exam_date:
-            # Check if the exam date is related to the selected program
-            if not ExamDate.objects.filter(id=exam_date.id, program=program).exists():
-                raise serializers.ValidationError({
-                    "exam_date": f"The selected program '{program.name}' does not have an exam on {exam_date.date}. Please choose a valid exam date."
-                })
+    #     if program and exam_date:
+    #         if not ExamDate.objects.filter(id=exam_date.id, program=program).exists():
+    #             raise serializers.ValidationError({
+    #                 "exam_date": f"The selected program '{program.name}' does not have an exam on {exam_date.date}. Please choose a valid exam date."
+    #             })
 
-        return data
+    #     return data
     
 class ApplicantProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -131,18 +131,7 @@ class ExamRegistrationSerializer(serializers.ModelSerializer):
         )
         
         return exam_registration
-    
 
-    def validate(self, data):
-        program = data.get('program')
-        exam_date = data.get('exam_date')
-
-        if exam_date and program and not ExamDate.objects.filter(id=exam_date.id, program=program).exists():
-            raise serializers.ValidationError({
-                "exam_date": f"The selected program '{program.name}' does not have an exam on {exam_date.date}. Please choose a valid exam date."
-            })
-
-        return data
     
 class ExamRegionSerializer(serializers.ModelSerializer):
     class Meta:
