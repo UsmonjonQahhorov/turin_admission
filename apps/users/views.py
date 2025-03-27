@@ -30,7 +30,7 @@ class AplicantCreateView(CreateAPIView):
     
 
 class AplicantListView(ListAPIView):
-    serializer_class = serializers.ApplicantRegistrationSerializer
+    serializer_class = serializers.ApplicantRetriveSerializer
     queryset = Applicant.objects.all()
 
     def get(self, request, *args, **kwargs):
