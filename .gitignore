@@ -670,7 +670,7 @@ cython_debug/
 /.idea/
 /.venv
 /.env
+.gitignore
 
 /.apps/users/migrations
 /.apps/payments/migrations
-/.apps/transactions/migrations
