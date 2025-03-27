@@ -76,7 +76,7 @@ class ClickWebhookAPIView(ClickWebhook):
 
 class PaymentInitializeView(APIView):
     serializer_class = serializers.PaymentInitializeSerializer
-    permission_classes = [IsAuthenticate]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
