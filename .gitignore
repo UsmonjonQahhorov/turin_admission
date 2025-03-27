@@ -670,9 +670,13 @@ cython_debug/
 /.idea/
 /.venv
 /.env
+.gitignore
 
 /.apps/users/migrations
 /.apps/payments/migrations
+<<<<<<< HEAD
 /.apps/transactions/migrations
 
 
+=======
+>>>>>>> origin/develop
