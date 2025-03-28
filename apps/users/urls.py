@@ -29,7 +29,11 @@ urlpatterns = [
     path("exam/reg/status/", views.ExamRegistrationListView.as_view(), name="exam-registration-list"),
     path("exam/delete/<int:pk>", views.ExamDateDeleteView.as_view(), name="exam_delete"),
 
+    path("exam/date/create/", views.ExamDatePost.as_view(), name="exam-date-create"),
+    path("exam/region/create/", views.ExamRegionCreateView.as_view(), name="exam-region-create"),
+
     path("programs/exam/dates", views.ExamDateProgram.as_view(), name="program_exam_dates"),
+    path("exam/date/attach/", views.ExamDateCreateView.as_view(), name="exam-date-attach"),
 
 ]
 

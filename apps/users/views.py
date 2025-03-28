@@ -156,6 +156,7 @@ class ExamRegistrationListView(ListAPIView):
 
 class ExamRegisterUpdate(UpdateAPIView):
     serializer_class=serializers.RegisterUpdateSer
+
     
 """EXAM REGISTRATION CRUD CLOSED"""
 
@@ -165,8 +166,13 @@ class ExamRegisterUpdate(UpdateAPIView):
 
 """Exam Dates Views"""
 
+class ExamDateCreateView(CreateAPIView):
+    """attach a date to the program"""
+    serializer_class = serializers.ProgramExamdateSerializer
+
+
 class ExamDatesListView(ListAPIView):
-    serializer_class = serializers.ExamDateSerializer
+    serializer_class = serializers.ExamDateListSerializer
     queryset = ExamDate.objects.all()
 
     def get(self, request, *args, **kwargs):
@@ -185,6 +191,12 @@ class ExamDateDeleteView(DestroyAPIView):
 
 class ExamDatePost(CreateAPIView):
     serializer_class = serializers.ExamDateSerializer
+
+
+
+class ExamRegionCreateView(CreateAPIView):
+    serializer_class = serializers.ExamRegionSerializer
+
 
 
 

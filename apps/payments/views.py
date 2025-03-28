@@ -87,7 +87,7 @@ class PaymentInitializeView(APIView):
         data = serializer.validated_data
         logger.debug(f"Received payment initialization request: {data}")
 
-        amount = Decimal(data['amount'])
+        amount = 200000
         updated_amount = amount * Decimal('1.01')
 
         # Save payment to the database BEFORE generating payment link
@@ -102,8 +102,8 @@ class PaymentInitializeView(APIView):
 
         paylink = click_up.initializer.generate_pay_link(
             id=payment.id,
-            amount=float(data['amount']),
-            return_url=data.get("return_url", "https://example.com")
+            amount=float(200000),
+            return_url=data.get("return_url", f"{data['return_url']}"),
         )
         print(f"Generated Click payment link: {paylink}")
         print(f"Generated payment link with amount: {data['amount']}")

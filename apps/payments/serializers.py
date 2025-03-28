@@ -16,6 +16,5 @@ class PaymentMethodSerializer(serializers.Serializer):
 
 
 class PaymentInitializeSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
     return1_url = serializers.URLField(required=False, allow_blank=True)
 

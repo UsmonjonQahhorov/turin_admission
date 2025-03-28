@@ -2,6 +2,7 @@ import re
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext as _
+from apps.payments.models import Payment
 from apps.users.choices import Status
 from .models import Applicant, ExamDate, ExamRegion, ExamRegistration, Program, ProgramExamdate
 from django.contrib.auth.hashers import make_password
@@ -140,11 +141,23 @@ class ExamRegionSerializer(serializers.ModelSerializer):
 
 """Exam Date Serializers"""
 class ExamDateSerializer(serializers.ModelSerializer):
-    region = ExamRegionSerializer()
-
     class Meta:
         model = ExamDate
         fields = "region", "date"
+
+
+"""Exam Date List Serializers"""
+class ExamDateListSerializer(serializers.ModelSerializer):
+    region = ExamRegionSerializer()
+    class Meta:
+        model = ExamDate
+        fields = "region", "date"
+
+"""Program Exam Date   Serializer"""
+class ProgramExamdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramExamdate
+        fields = "__all__"
 
 
 class ExamDateUpdate(serializers.ModelField):
@@ -189,6 +202,7 @@ class LoginSerializer(serializers.Serializer):
 class ApplicantRetriveSerializer(serializers.ModelSerializer):
     program = ProgramSerializer()
     exam_date = ExamDateSerializer()
+    payment_status = serializers.SerializerMethodField()
     class Meta:
         model = Applicant
         fields = [
@@ -205,7 +219,21 @@ class ApplicantRetriveSerializer(serializers.ModelSerializer):
         "program",
         "exam_date",
         'score',
+        "payment_status"
         ]
+
+    def get_payment_status(self, obj):
+        # Retrieve the latest payment for the applicant
+        latest_payment = Payment.objects.filter(applicant=obj).order_by('-id').first()
+        
+        if latest_payment:
+            return {
+                'status': latest_payment.status,
+                'amount': latest_payment.amount,
+                'payment_type': latest_payment.payment_type,
+                'transaction_id': latest_payment.transaction_id
+            }
+        return None
 
 
 
@@ -217,3 +245,9 @@ class ProgramExamDateSer(serializers.ModelSerializer):
     class Meta:
         model = ProgramExamdate
         fields = ["programs", "exam_dates"]
+
+
+class ExamDateCreate(serializers.ModelSerializer):
+    class Meta:
+        model = ExamDate
+        fields = "__all__"
