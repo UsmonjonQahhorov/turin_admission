@@ -85,6 +85,7 @@ class PaymentInitializeView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
+        print(data)
         logger.debug(f"Received payment initialization request: {data}")
 
         amount = 200000
@@ -98,15 +99,13 @@ class PaymentInitializeView(APIView):
             applicant_id=request.user.id
         )
         print(f"Payment record created: {payment.id}")
-        print(f"Payment amount before sending: {type(data['amount'])}")
 
         paylink = click_up.initializer.generate_pay_link(
             id=payment.id,
             amount=float(200000),
-            return_url=data.get("return_url", f"{data['return_url']}"),
+            return_url=data.get("return_url", f"{data['return1_url']}"),
         )
         print(f"Generated Click payment link: {paylink}")
-        print(f"Generated payment link with amount: {data['amount']}")
 
         return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
 
