@@ -128,7 +128,7 @@ class ExamRegion(models.Model):
 
 class ExamDate(models.Model):
     region = models.ForeignKey(ExamRegion, on_delete=models.CASCADE)
-    date = models.DateTimeField()
+    date = models.DateTimeField()   
 
     def __str__(self):
         return f"{self.region.name} - {self.date}"

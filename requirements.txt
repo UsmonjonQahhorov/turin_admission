@@ -43,3 +43,4 @@ setuptools==75.8.2
 six==1.17.0
 sqlparse==0.5.3
 typing_extensions==4.12.2
+payme-pkg==3.0.24

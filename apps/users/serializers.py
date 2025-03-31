@@ -42,19 +42,6 @@ class ApplicantRegistrationSerializer(serializers.ModelSerializer):
         validated_data["password"] = make_password(validated_data["password"])  # ✅ Hash the password
         return super().create(validated_data)
     
-
-    # def validate(self, data):
-    #     print(data)
-    #     program = data.get('program')
-    #     exam_date = data.get('exam_date')
-
-    #     if program and exam_date:
-    #         if not ExamDate.objects.filter(id=exam_date.id, program=program).exists():
-    #             raise serializers.ValidationError({
-    #                 "exam_date": f"The selected program '{program.name}' does not have an exam on {exam_date.date}. Please choose a valid exam date."
-    #             })
-
-    #     return data
     
 class ApplicantProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -102,13 +89,22 @@ class ApplicantPassUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This phone number is already in use.")
         return value
 
+
+
+
+
+"""=========================================================Program Serializer======================================================"""
 class ProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
         fields = "__all__"
+"""=========================================================Program Serializer======================================================"""
 
 
-"""Exam Registration Serializer"""
+
+
+
+"""Exam Registration Serializer need"""
 class ExamRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamRegistration
@@ -134,35 +130,27 @@ class ExamRegistrationSerializer(serializers.ModelSerializer):
         return exam_registration
 
     
-class ExamRegionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ExamRegion
-        fields = "__all__"
 
-"""Exam Date Serializers"""
-class ExamDateSerializer(serializers.ModelSerializer):
+class ExamDateSerializer(serializers.ModelSerializer): #This serializer is used to use as a subserializer, this is not main serializer. Used in several get methods
     class Meta:
         model = ExamDate
         fields = "region", "date"
 
 
 """Exam Date List Serializers"""
+
+class ExamRegionSerializer(serializers.ModelSerializer): #This serializer is used to use as a subserializer, this is not main serializer.Used in ExamDateListSerializer
+    class Meta:
+        model = ExamRegion
+        fields = ['name']
+
+
 class ExamDateListSerializer(serializers.ModelSerializer):
     region = ExamRegionSerializer()
     class Meta:
         model = ExamDate
-        fields = "region", "date"
+        fields = "id", "region", "date"
 
-"""Program Exam Date   Serializer"""
-class ProgramExamdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProgramExamdate
-        fields = "__all__"
-
-
-class ExamDateUpdate(serializers.ModelField):
-    class Meta:
-        fields = "__all__"
 
 
 class AplicantRetriveExamSerializer(serializers.ModelSerializer):
@@ -185,20 +173,13 @@ class RegisterUpdateSer(serializers.ModelSerializer):
     class Meta:
         model = ExamRegistration
         fields = ["program", "exam_date"]
-    
-    """Login Serializer"""
-class LoginSerializer(serializers.Serializer):
-    phone_number = serializers.CharField()
-    password = serializers.CharField(write_only=True)
 
-    # def validate(self, data):
-    #     user = authenticate(username=data["username"], password=data["password"])
-    #     if not user:
-    #         raise serializers.ValidationError(_("Invalid username or password"))
-    #     return {"user": user}
-    
+"""========================================================Exam Registration Model Serializer======================================================"""
+        
 
 
+
+"""========================================================Applicant Retrive Serializer======================================================"""
 class ApplicantRetriveSerializer(serializers.ModelSerializer):
     program = ProgramSerializer()
     exam_date = ExamDateSerializer()
@@ -234,20 +215,86 @@ class ApplicantRetriveSerializer(serializers.ModelSerializer):
                 'transaction_id': latest_payment.transaction_id
             }
         return None
+    
+"""========================================================Applicant Retrive Serializer========================================================================="""
 
 
 
 """Exam dates"""
-
 class ProgramExamDateSer(serializers.ModelSerializer):
     programs = ProgramSerializer()
     exam_dates = ExamDateSerializer()
     class Meta:
         model = ProgramExamdate
-        fields = ["programs", "exam_dates"]
+        fields = ["id","programs", "exam_dates"]
 
 
-class ExamDateCreate(serializers.ModelSerializer):
+class ProgramExamUpdateDateSer(serializers.ModelSerializer):# Thi serializer is used only in UpdateAttachedExam
+    programs = ProgramSerializer()
+    exam_dates = ExamDateSerializer()
+
     class Meta:
-        model = ExamDate
-        fields = "__all__"
+        model = ProgramExamdate
+        fields = ["id", "programs", "exam_dates"]
+
+    def update(self, instance, validated_data):
+        # Extract nested exam_dates data
+        exam_dates_data = validated_data.pop("exam_dates", {})
+        program_data = validated_data.pop("programs", {})
+
+        # Update exam date
+        if exam_dates_data:
+            instance.exam_dates.date = exam_dates_data.get("date", instance.exam_dates.date)
+
+            # Update region safely
+            if "region" in exam_dates_data and isinstance(exam_dates_data["region"], dict):
+                instance.exam_dates.region.name = exam_dates_data["region"].get("name", instance.exam_dates.region.name)
+                instance.exam_dates.region.save()
+
+            instance.exam_dates.save()
+
+        # Update program safely
+        if program_data:
+            instance.programs.name = program_data.get("name", instance.programs.name)
+            instance.programs.save()
+
+        instance.save()
+        return instance
+
+
+
+class ExamDateCreateSerializer(serializers.Serializer):
+
+    program = serializers.IntegerField(required=True)
+    region_name = serializers.CharField(max_length=255, required=True)
+    exam_date = serializers.DateTimeField(required=True)
+
+    def create(self, validated_data):
+        program_id = validated_data["program"]
+        region_name = validated_data["region_name"]
+        exam_date = validated_data["exam_date"]
+
+        program_instance = Program.objects.get(id=program_id)
+        region_instance = ExamRegion(
+            name=region_name
+        )
+        region_instance.save()
+
+        exam_date_instance = ExamDate(
+            region=region_instance,
+            date=exam_date
+        )
+        exam_date_instance.save()
+        program_exam_date = ProgramExamdate(
+            programs=program_instance,
+            exam_dates=exam_date_instance
+        )
+        program_exam_date.save()
+        print(program_exam_date)
+        return program_exam_date
+
+
+    
+
+
+

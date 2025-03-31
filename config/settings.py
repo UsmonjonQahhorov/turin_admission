@@ -187,13 +187,12 @@ MEDIA_URL = 'media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CLICK_SETTINGS = {
-    'service_id': os.environ.get('CLICK_SERVICE_ID'),
-    'merchant_id': os.environ.get('CLICK_MERCHANT_ID'),
-    'secret_key': os.environ.get('CLICK_SECRET_KEY'),
-    'merchant_user_id': os.environ.get('CLICK_MERCHANT_USER_ID'),
-    'click_amount': os.environ.get('CLICK_AMOUNT')
-}
+
+
+PAYME_SHOP_ID = os.environ.get("PAYME_SHOP_ID")
+PAYME_SECRET_KEY = os.environ.get("PAYME_SECRET_KEY")
+PAYME_ACCOUNT_FIELD = os.environ.get("PAYME_ACCOUNT_FIELD")
+
 
 CLICK_SERVICE_ID = os.environ.get('CLICK_SERVICE_ID')
 CLICK_MERCHANT_ID = os.environ.get('CLICK_MERCHANT_ID')

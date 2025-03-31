@@ -1,5 +1,5 @@
-from django.shortcuts import redirect
-from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
+from django.shortcuts import get_object_or_404, redirect
+from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView, RetrieveAPIView
 from apps.users import serializers
 from apps.users.models import Applicant, ExamDate, ExamRegistration, Program, ProgramExamdate
 from django.views.decorators.csrf import csrf_exempt
@@ -12,6 +12,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
 from rest_framework.permissions import IsAuthenticated
+
+from rest_framework.mixins import DestroyModelMixin
 
 
 
@@ -145,7 +147,7 @@ class ExamRegistrationCreateView(CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
 
-"""Exam Registration List View Test"""
+"""Exam Registration List View Test, This endpoint gets the list of Exam registrations status"""
 class ExamRegistrationListView(ListAPIView):
     serializer_class = serializers.RegistrationRetriveSerialize
     permission_classes = [IsAuthenticated]  # ✅ Require authentication
@@ -164,14 +166,15 @@ class ExamRegisterUpdate(UpdateAPIView):
     
 
 
-"""Exam Dates Views"""
+class ExamDatesListView(ListAPIView): #Serializer used for getting list of exam dates.
 
-class ExamDateCreateView(CreateAPIView):
-    """attach a date to the program"""
-    serializer_class = serializers.ProgramExamdateSerializer
-
-
-class ExamDatesListView(ListAPIView):
+    """{
+    "region": {
+      "name": "Tashkent"
+    },
+    "date": "2025-04-10T09:00:00Z"
+  }"""
+    
     serializer_class = serializers.ExamDateListSerializer
     queryset = ExamDate.objects.all()
 
@@ -181,31 +184,61 @@ class ExamDatesListView(ListAPIView):
         return JsonResponse(serializer.data, safe=False)
     
 
-from rest_framework.views import APIView
+
+class ExamDateDeleteView(APIView):
+    def delete(self, request, *args, **kwargs):
+        instance = get_object_or_404(ExamDate, pk=kwargs.get("pk"))
+        instance.delete()
+        return Response({"message": "Date deleted successfully!"}, status=status.HTTP_204_NO_CONTENT)
 
 
 
-class ExamDateDeleteView(DestroyAPIView):
-    serializer_class = serializers.ExamDateUpdate
-
-
-class ExamDatePost(CreateAPIView):
-    serializer_class = serializers.ExamDateSerializer
-
-
-
-class ExamRegionCreateView(CreateAPIView):
-    serializer_class = serializers.ExamRegionSerializer
-
-
-
-
-class ExamDateProgram(ListAPIView):
+class ExamDateProgram(ListAPIView): # get list of the program exam dates and regions at ones 
     serializer_class = serializers.ProgramExamDateSer
     queryset = ProgramExamdate.objects.all()
+
+
+class ExamDateRetriveProgram(RetrieveAPIView): # get list of the program exam dates and regions at ones 
+    serializer_class = serializers.ProgramExamDateSer
+    queryset = ProgramExamdate.objects.all()
+
+
 
 
 """EXAM DATE CRUD CLOSED"""
 
 
+class ExamDateCreateAPIView(CreateAPIView):
+    """exam date create ApiView"""
+    serializer_class = serializers.ExamDateCreateSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(
+            {"message": "Exam date created successfully!", "id": instance.id},
+            status=status.HTTP_201_CREATED
+        )
+    
+
+"""=========================================Attached exam date to program========================================="""
+
+class DeleteAttachedExam(APIView):
+    """Delete the attached exam date for the program"""
+    def delete(self, request, *args, **kwargs):
+        instance = get_object_or_404(ProgramExamdate, pk=kwargs.get("pk"))
+        instance.delete()
+        return Response({"message": "Exam date deleted successfully!"}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class UpdateAttachedExam(UpdateAPIView):
+    queryset = ProgramExamdate.objects.all()
+    serializer_class = serializers.ProgramExamUpdateDateSer
+    """Update the attached exam date for the program"""
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

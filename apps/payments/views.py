@@ -2,8 +2,9 @@ from datetime import datetime, timezone
 from decimal import Decimal
 import json
 import logging
+from rest_framework import response
 import os
-from django.conf import settings
+from config import settings
 from django.shortcuts import get_object_or_404, redirect
 import requests
 from rest_framework.generics import CreateAPIView, ListAPIView
@@ -27,22 +28,22 @@ from rest_framework.decorators import api_view
 
 from click_up.views import ClickWebhook
 from click_up import ClickUp
+
+from payme import Payme
+
 from click_up.typing.request import ClickShopApiRequest
 from click_up.const import Action
 from click_up.models import ClickTransaction
 from click_up.typing.request import ClickShopApiRequest
-from config.settings import CLICK_SERVICE_ID, CLICK_MERCHANT_ID
+from config.settings import CLICK_SERVICE_ID, CLICK_MERCHANT_ID, PAYME_SHOP_ID
 
 click_up = ClickUp(service_id=CLICK_SERVICE_ID, merchant_id=CLICK_MERCHANT_ID) 
 
-
-CLICK_SERVICE_ID = os.environ.get("CLICK_SERVICE_ID")
-CLICK_MERCHANT_ID = os.environ.get("CLICK_MERCHANT_ID")
-CLICK_MERCHANT_USER_ID = os.environ.get("CLICK_MERCHANT_USER_ID")
-
-
-PAYME_SHOP_ID = os.environ.get("PAYME_SHOP_ID")
-PAYME_SECRET_KEY = os.environ.get("PAYME_SECRET_KEY")
+payme = Payme(
+    payme_id=settings.PAYME_SHOP_ID,
+    payme_key=settings.PAYME_SECRET_KEY,
+    is_test_mode=True,
+)
 
 __name__
 
@@ -80,34 +81,52 @@ class PaymentInitializeView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-    
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-        print(data)
         logger.debug(f"Received payment initialization request: {data}")
 
-        amount = 200000
+        amount = 1000  # Example amount, replace with actual logic to get the amount
         updated_amount = amount * Decimal('1.01')
+        if data["payment_type"] == "click":
+            payment = Payment.objects.create(
+                amount=updated_amount,
+                status=Status.PENDING_PAYMENT, 
+                provider="CLICK",
+                applicant_id=request.user.id
+            )
+            print(f"Payment record created: {payment.id}")
 
-        # Save payment to the database BEFORE generating payment link
-        payment = Payment.objects.create(
-            amount=updated_amount,
-            status=Status.PENDING_PAYMENT,  # Ensure there is a 'PENDING' status in your model
-            provider="CLICK",
-            applicant_id=request.user.id
+            paylink = click_up.initializer.generate_pay_link(
+            id=payment.id,
+            amount=float(1000),
+            return_url=data.get("return_url", f"{data['return1_url']}"),
         )
-        print(f"Payment record created: {payment.id}")
+            print(f"Generated Click payment link: {paylink}")
 
-        paylink = click_up.initializer.generate_pay_link(
+            return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
+
+        elif data["payment_type"] == "payme":
+            payment = Payment.objects.create(
+                amount=updated_amount,
+                status=Status.PENDING_PAYMENT,
+                provider="PAYME",
+                applicant_id=request.user.id
+            )
+            paylink = payme.initializer.generate_pay_link(
+                id=payment.id,     
+                amount=float(200000),
+                return_url=data.get("return_url", f"{data['return1_url']}"),
+            )
+            paylink = payme.initializer.generate_pay_link(
             id=payment.id,
             amount=float(200000),
             return_url=data.get("return_url", f"{data['return1_url']}"),
         )
-        print(f"Generated Click payment link: {paylink}")
+            print(f"Generated payme payment link: {paylink}")
 
-        return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
+            return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
+
 
 
 

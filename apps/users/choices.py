@@ -44,9 +44,8 @@ class Status(models.TextChoices):
 
 
 class PaymentType(models.TextChoices):
-        FIRST = "first", "Первичная регистрация"
-        SECOND = "second", "Вторая попытка"
-        THIRD_PLUS = "third_plus", "Третья и более"
+        CLICK = "click", "CLICK"
+        PAYME = "payme", "PAYME"
 
 
 class RoleChoices(models.TextChoices):

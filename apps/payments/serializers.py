@@ -16,5 +16,6 @@ class PaymentMethodSerializer(serializers.Serializer):
 
 
 class PaymentInitializeSerializer(serializers.Serializer):
+    payment_type = serializers.ChoiceField(choices=["click", "payme"])
     return1_url = serializers.URLField(required=False, allow_blank=True)
 

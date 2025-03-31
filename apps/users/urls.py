@@ -23,17 +23,16 @@ urlpatterns = [
     path('applicant/password/change/', views.ApplicantPassUpdateView.as_view(), name="change-password"),
 
     path('exam/registration/', views.ExamRegistrationCreateView.as_view(), name="exam-registration-create"),
-    path("exam/register/update/<int:pk>", views.ExamRegisterUpdate.as_view(), name="register_update"),
+    path("exam/update/<int:pk>", views.UpdateAttachedExam.as_view(), name="exam-update"),
 
-    path('exam/dates/', views.ExamDatesListView.as_view(), name="exam-date-create"),
+    path('exam/dates/', views.ExamDatesListView.as_view(), name="exam-date-list"),
     path("exam/reg/status/", views.ExamRegistrationListView.as_view(), name="exam-registration-list"),
     path("exam/delete/<int:pk>", views.ExamDateDeleteView.as_view(), name="exam_delete"),
-
-    path("exam/date/create/", views.ExamDatePost.as_view(), name="exam-date-create"),
-    path("exam/region/create/", views.ExamRegionCreateView.as_view(), name="exam-region-create"),
+    path("exam/date/create", views.ExamDateCreateAPIView.as_view(), name="exam_region_create"),
 
     path("programs/exam/dates", views.ExamDateProgram.as_view(), name="program_exam_dates"),
-    path("exam/date/attach/", views.ExamDateCreateView.as_view(), name="exam-date-attach"),
+    path("programs/exam/dates/by-id/<int:pk>", views.ExamDateRetriveProgram.as_view(), name="program_exam_dates"),
+    path("programs/delete-attached-exam-to-program/<int:pk>", views.DeleteAttachedExam.as_view(), name="program_exam_date_delete"),
 
 ]
 
