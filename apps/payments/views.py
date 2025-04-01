@@ -39,7 +39,7 @@ from config.settings import CLICK_SERVICE_ID, CLICK_MERCHANT_ID, PAYME_SHOP_ID
 
 click_up = ClickUp(service_id=CLICK_SERVICE_ID, merchant_id=CLICK_MERCHANT_ID) 
 
-payme = Payme(
+payme_pkg = Payme(
     payme_id=settings.PAYME_SHOP_ID,
     payme_key=settings.PAYME_SECRET_KEY,
     is_test_mode=True,
@@ -113,16 +113,11 @@ class PaymentInitializeView(APIView):
                 provider="PAYME",
                 applicant_id=request.user.id
             )
-            paylink = payme.initializer.generate_pay_link(
+            paylink = payme_pkg.initializer.generate_pay_link(
                 id=payment.id,     
                 amount=float(200000),
                 return_url=data.get("return_url", f"{data['return1_url']}"),
             )
-            paylink = payme.initializer.generate_pay_link(
-            id=payment.id,
-            amount=float(200000),
-            return_url=data.get("return_url", f"{data['return1_url']}"),
-        )
             print(f"Generated payme payment link: {paylink}")
 
             return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
