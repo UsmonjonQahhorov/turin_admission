@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 import json
 import logging
-import payme
+# import payme
 from rest_framework import response
 import os
 from config import settings
@@ -38,11 +38,11 @@ from config.settings import CLICK_SERVICE_ID, CLICK_MERCHANT_ID, PAYME_SHOP_ID
 
 click_up = ClickUp(service_id=CLICK_SERVICE_ID, merchant_id=CLICK_MERCHANT_ID) 
 
-payme_pkg = payme.Payme(
-    payme_id=settings.PAYME_SHOP_ID,
-    payme_key=settings.PAYME_SECRET_KEY,
-    is_test_mode=True,
-)
+# payme_pkg = payme.Payme(
+#     payme_id=settings.PAYME_SHOP_ID,
+#     payme_key=settings.PAYME_SECRET_KEY,
+#     is_test_mode=True,
+# )
 
 __name__
 
@@ -85,7 +85,7 @@ class PaymentInitializeView(APIView):
         data = serializer.validated_data
         logger.debug(f"Received payment initialization request: {data}")
 
-        amount = 1000  # Example amount, replace with actual logic to get the amount
+        amount = 200_000.00  # Example amount, replace with actual logic to get the amount
         updated_amount = amount * Decimal('1.01')
         if data["payment_type"] == "click":
             payment = Payment.objects.create(
@@ -98,28 +98,28 @@ class PaymentInitializeView(APIView):
 
             paylink = click_up.initializer.generate_pay_link(
             id=payment.id,
-            amount=float(1000),
+            amount=float(200_000.00),
             return_url=data.get("return_url", f"{data['return1_url']}"),
         )
             print(f"Generated Click payment link: {paylink}")
 
             return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
 
-        elif data["payment_type"] == "payme":
-            payment = Payment.objects.create(
-                amount=updated_amount,
-                status=Status.PENDING_PAYMENT,
-                provider="PAYME",
-                applicant_id=request.user.id
-            )
-            paylink = payme_pkg.initializer.generate_pay_link(
-                id=payment.id,     
-                amount=float(200000),
-                return_url=data.get("return_url", f"{data['return1_url']}"),
-            )
-            print(f"Generated payme payment link: {paylink}")
+        # elif data["payment_type"] == "payme":
+        #     payment = Payment.objects.create(
+        #         amount=updated_amount,
+        #         status=Status.PENDING_PAYMENT,
+        #         provider="PAYME",
+        #         applicant_id=request.user.id
+        #     )
+        #     paylink = payme_pkg.initializer.generate_pay_link(
+        #         id=payment.id,     
+        #         amount=float(200000),
+        #         return_url=data.get("return_url", f"{data['return1_url']}"),
+        #     )
+        #     print(f"Generated payme payment link: {paylink}")
 
-            return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
+        #     return Response({"payment_url": paylink}, status=status.HTTP_200_OK)
 
 
 
