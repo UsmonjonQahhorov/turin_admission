@@ -38,7 +38,7 @@ from config.settings import CLICK_SERVICE_ID, CLICK_MERCHANT_ID, PAYME_SHOP_ID
 
 click_up = ClickUp(service_id=CLICK_SERVICE_ID, merchant_id=CLICK_MERCHANT_ID) 
 
-payme_pkg = payme(
+payme_pkg = payme.Payme(
     payme_id=settings.PAYME_SHOP_ID,
     payme_key=settings.PAYME_SECRET_KEY,
     is_test_mode=True,
