@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 import json
 import logging
+import payme
 from rest_framework import response
 import os
 from config import settings
@@ -29,8 +30,6 @@ from rest_framework.decorators import api_view
 from click_up.views import ClickWebhook
 from click_up import ClickUp
 
-from payme import Payme
-
 from click_up.typing.request import ClickShopApiRequest
 from click_up.const import Action
 from click_up.models import ClickTransaction
@@ -39,7 +38,7 @@ from config.settings import CLICK_SERVICE_ID, CLICK_MERCHANT_ID, PAYME_SHOP_ID
 
 click_up = ClickUp(service_id=CLICK_SERVICE_ID, merchant_id=CLICK_MERCHANT_ID) 
 
-payme_pkg = Payme(
+payme_pkg = payme(
     payme_id=settings.PAYME_SHOP_ID,
     payme_key=settings.PAYME_SECRET_KEY,
     is_test_mode=True,
